@@ -1,4 +1,5 @@
 resource "aws_cloudfront_distribution" "cdn" {
+  depends_on          = [aws_lambda_function.reverse_proxy_lambda]
   enabled             = true
   is_ipv6_enabled     = true
   comment             = "CloudFront Distribution for S3 Static Website"
