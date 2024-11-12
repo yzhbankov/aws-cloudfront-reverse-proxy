@@ -45,28 +45,6 @@ resource "aws_iam_role" "reverse_proxy_edge_lambda_role" {
   })
 }
 
-# Create the Lambda Function
-resource "aws_lambda_function" "reverse_proxy_lambda" {
-  function_name    = "${terraform.workspace}-reverse-proxy-lambda-yz"
-  role             = aws_iam_role.reverse_proxy_edge_lambda_role.arn
-  filename         = data.archive_file.reverse_proxy_lambda.output_path
-  handler          = "index.handler"
-  source_code_hash = data.archive_file.reverse_proxy_lambda.output_base64sha256
-  runtime          = "nodejs18.x"
-  timeout          = local.lambda_timeout
-
-  environment {
-    variables = {
-      WEB_SITE_ONE_URL = "http://${aws_s3_bucket.static_website_one.bucket}.s3-website-${var.AWS_REGION}.amazonaws.com"
-      WEB_SITE_TWO_URL = "http://${aws_s3_bucket.static_website_two.bucket}.s3-website-${var.AWS_REGION}.amazonaws.com"
-    }
-  }
-
-  depends_on = [
-    aws_iam_role_policy_attachment.lambda_policy_attachment
-  ]
-}
-
 # Create Custom IAM Policy for Lambda using the specific Lambda version ARN
 resource "aws_iam_policy" "custom_lambda_policy" {
   name = "${terraform.workspace}-custom-lambda-policy"
@@ -88,7 +66,7 @@ resource "aws_iam_policy" "custom_lambda_policy" {
           "lambda:InvokeFunction",
           "lambda:GetFunctionConfiguration"
         ],
-        Resource = aws_lambda_function.reverse_proxy_lambda.signing_profile_version_arn
+        Resource = aws_lambda_function.reverse_proxy_lambda.arn
       }
     ]
   })
@@ -98,4 +76,26 @@ resource "aws_iam_policy" "custom_lambda_policy" {
 resource "aws_iam_role_policy_attachment" "lambda_policy_attachment" {
   role       = aws_iam_role.reverse_proxy_edge_lambda_role.name
   policy_arn = aws_iam_policy.custom_lambda_policy.arn
+}
+
+# Create the Lambda Function
+resource "aws_lambda_function" "reverse_proxy_lambda" {
+  function_name    = "${terraform.workspace}-reverse-proxy-lambda-yz"
+  role             = aws_iam_role.reverse_proxy_edge_lambda_role.arn
+  filename         = data.archive_file.reverse_proxy_lambda.output_path
+  handler          = "index.handler"
+  source_code_hash = data.archive_file.reverse_proxy_lambda.output_base64sha256
+  runtime          = "nodejs18.x"
+  timeout          = local.lambda_timeout
+
+  environment {
+    variables = {
+      WEB_SITE_ONE_URL = "http://${aws_s3_bucket.static_website_one.bucket}.s3-website-${var.AWS_REGION}.amazonaws.com"
+      WEB_SITE_TWO_URL = "http://${aws_s3_bucket.static_website_two.bucket}.s3-website-${var.AWS_REGION}.amazonaws.com"
+    }
+  }
+
+  depends_on = [
+    aws_iam_role_policy_attachment.lambda_policy_attachment
+  ]
 }
