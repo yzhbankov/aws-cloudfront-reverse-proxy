@@ -45,7 +45,6 @@ resource "aws_iam_role" "reverse_proxy_edge_lambda_role" {
   })
 }
 
-# Create Custom IAM Policy for Lambda using the specific Lambda version ARN
 resource "aws_iam_policy" "custom_lambda_policy" {
   name = "${terraform.workspace}-custom-lambda-policy"
   policy = jsonencode({
@@ -66,7 +65,7 @@ resource "aws_iam_policy" "custom_lambda_policy" {
           "lambda:InvokeFunction",
           "lambda:GetFunctionConfiguration"
         ],
-        Resource = aws_lambda_function.reverse_proxy_lambda.arn
+        Resource = "*"
       }
     ]
   })
