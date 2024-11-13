@@ -37,7 +37,7 @@ resource "aws_cloudfront_distribution" "cdn" {
 
     lambda_function_association {
       event_type   = "origin-request"
-      lambda_arn   = aws_lambda_function.reverse_proxy_lambda.arn
+      lambda_arn   = aws_lambda_function.reverse_proxy_lambda.qualified_arn
       include_body = false
     }
   }
