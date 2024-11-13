@@ -5,7 +5,7 @@ resource "aws_cloudfront_distribution" "cdn" {
   default_root_object = "index.html"
 
   origin {
-    domain_name = aws_s3_bucket.static_website_one.website_endpoint
+    domain_name = aws_s3_bucket.static_website_one.bucket_regional_domain_name
     origin_id   = "S3-static-website-origin"
 
     custom_origin_config {
@@ -37,7 +37,7 @@ resource "aws_cloudfront_distribution" "cdn" {
 
     lambda_function_association {
       event_type   = "origin-request"
-      lambda_arn   = aws_lambda_function.reverse_proxy_lambda.signing_profile_version_arn
+      lambda_arn   = aws_lambda_function.reverse_proxy_lambda.qualified_arn
       include_body = false
     }
   }
