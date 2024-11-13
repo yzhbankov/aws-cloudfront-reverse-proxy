@@ -86,6 +86,7 @@ resource "aws_lambda_function" "reverse_proxy_lambda" {
   source_code_hash = data.archive_file.reverse_proxy_lambda.output_base64sha256
   runtime          = "nodejs18.x"
   timeout          = local.lambda_timeout
+  publish          = true
 
   environment {
     variables = {
