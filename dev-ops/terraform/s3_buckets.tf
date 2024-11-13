@@ -2,8 +2,8 @@ locals {
   website_one_files = fileset("${path.module}/../../apps/web-site-one", "**/*")
   website_two_files = fileset("${path.module}/../../apps/web-site-two", "**/*")
   version_mapping = {
-    "v1" = aws_s3_bucket.static_website_one.website_endpoint
-    "v2" = aws_s3_bucket.static_website_two.website_endpoint
+    "v1" = "http://${aws_s3_bucket.static_website_one.bucket}.s3-website-${var.AWS_REGION}.amazonaws.com"
+    "v2" = "http://${aws_s3_bucket.static_website_two.bucket}.s3-website-${var.AWS_REGION}.amazonaws.com"
   }
 }
 
