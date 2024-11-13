@@ -90,7 +90,7 @@ resource "aws_iam_role_policy_attachment" "lambda_policy_attachment" {
 
 # Create the Lambda Function
 resource "aws_lambda_function" "reverse_proxy_lambda" {
-  function_name    = "${terraform.workspace}-reverse-proxy-lambda-yz"
+  function_name    = "${terraform.workspace}-proxy-lambda-yz"
   role             = aws_iam_role.reverse_proxy_edge_lambda_role.arn
   filename         = data.archive_file.reverse_proxy_lambda.output_path
   handler          = "index.handler"
