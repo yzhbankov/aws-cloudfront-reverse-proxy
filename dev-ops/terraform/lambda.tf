@@ -19,7 +19,7 @@ resource "null_resource" "copy_version_mapping_to_lambda" {
     command = "cp ${local.version_mapping_file} ${local.reverse_proxy_lambda_path}/version_mapping.json"
   }
 
-  depends_on = [local_file.version_mapping_file]  # Ensure version mapping file is generated first
+  depends_on = [local_file.version_mapping_file] # Ensure version mapping file is generated first
 }
 
 # Package Lambda function as a zip archive
@@ -30,7 +30,7 @@ data "archive_file" "reverse_proxy_lambda" {
 
   depends_on = [
     null_resource.install_lambda_dependencies,
-    null_resource.copy_version_mapping_to_lambda  # Ensure the mapping file is copied before packaging
+    null_resource.copy_version_mapping_to_lambda # Ensure the mapping file is copied before packaging
   ]
 }
 
