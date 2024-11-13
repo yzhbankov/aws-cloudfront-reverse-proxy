@@ -1,5 +1,6 @@
 locals {
   reverse_proxy_lambda_path = "${path.module}/../../apps/lambdas/reverse-proxy"
+  version_mapping_file      = "${path.module}/version_mapping.json"
 }
 
 # Install Node.js dependencies for Lambda
@@ -13,13 +14,24 @@ resource "null_resource" "install_lambda_dependencies" {
   }
 }
 
+resource "null_resource" "copy_version_mapping_to_lambda" {
+  provisioner "local-exec" {
+    command = "cp ${local.version_mapping_file} ${local.reverse_proxy_lambda_path}/version_mapping.json"
+  }
+
+  depends_on = [local_file.version_mapping_file]  # Ensure version mapping file is generated first
+}
+
 # Package Lambda function as a zip archive
 data "archive_file" "reverse_proxy_lambda" {
   type        = "zip"
   source_dir  = local.reverse_proxy_lambda_path
   output_path = "/tmp/kinesis-lambda.zip"
 
-  depends_on = [null_resource.install_lambda_dependencies]
+  depends_on = [
+    null_resource.install_lambda_dependencies,
+    null_resource.copy_version_mapping_to_lambda  # Ensure the mapping file is copied before packaging
+  ]
 }
 
 # Define IAM Role for Lambda Function

@@ -1,6 +1,10 @@
 locals {
   website_one_files = fileset("${path.module}/../../apps/web-site-one", "**/*")
   website_two_files = fileset("${path.module}/../../apps/web-site-two", "**/*")
+  version_mapping = {
+    "v1" = aws_s3_bucket.static_website_one.website_endpoint
+    "v2" = aws_s3_bucket.static_website_two.website_endpoint
+  }
 }
 
 # Define your S3 buckets
@@ -101,4 +105,13 @@ resource "aws_s3_object" "bucket_two_files" {
   bucket   = aws_s3_bucket.static_website_two.bucket
   key      = each.value
   source   = "${path.module}/../../apps/web-site-two/${each.value}"
+}
+
+resource "local_file" "version_mapping_file" {
+  filename = "${path.module}/version_mapping.json"
+  content  = jsonencode(local.version_mapping)
+  depends_on = [
+    aws_s3_bucket_website_configuration.static_website_configuration_one,
+    aws_s3_bucket_website_configuration.static_website_configuration_two
+  ]
 }
