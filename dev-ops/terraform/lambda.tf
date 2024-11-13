@@ -87,12 +87,7 @@ resource "aws_lambda_function" "reverse_proxy_lambda" {
   timeout          = 30
   publish          = true
 
-  environment {
-    variables = {
-      WEB_SITE_ONE_URL = "http://${aws_s3_bucket.static_website_one.bucket}.s3-website-${var.AWS_REGION}.amazonaws.com"
-      WEB_SITE_TWO_URL = "http://${aws_s3_bucket.static_website_two.bucket}.s3-website-${var.AWS_REGION}.amazonaws.com"
-    }
-  }
+  # environment variables not allowed for Lambda Edge
 
   depends_on = [
     aws_iam_role_policy_attachment.lambda_policy_attachment
