@@ -5,7 +5,7 @@ resource "aws_cloudfront_distribution" "cdn" {
   default_root_object = "index.html"
 
   origin {
-    domain_name = aws_s3_bucket.static_website_one.website_domain
+    domain_name = aws_s3_bucket.static_website_one.bucket_regional_domain_name
     origin_id   = "S3-static-website-origin"
 
     custom_origin_config {
