@@ -7,7 +7,6 @@ locals {
   }
 }
 
-# Define your S3 buckets
 resource "aws_s3_bucket" "static_website_one" {
   bucket        = "${terraform.workspace}-static-website-bucket-one-yz"
   force_destroy = true
@@ -18,7 +17,18 @@ resource "aws_s3_bucket" "static_website_two" {
   force_destroy = true
 }
 
-# Configure website settings for both buckets
+# Ensure that version_mapping is updated only after the websites are configured
+resource "local_file" "version_mapping_file" {
+  filename = "${path.module}/version_mapping.json"
+  content  = jsonencode(local.version_mapping)
+  depends_on = [
+    aws_s3_bucket.static_website_one,
+    aws_s3_bucket.static_website_two,
+    aws_s3_bucket_website_configuration.static_website_configuration_one,
+    aws_s3_bucket_website_configuration.static_website_configuration_two
+  ]
+}
+
 resource "aws_s3_bucket_website_configuration" "static_website_configuration_one" {
   bucket = aws_s3_bucket.static_website_one.id
 
@@ -43,7 +53,6 @@ resource "aws_s3_bucket_website_configuration" "static_website_configuration_two
   }
 }
 
-# Set bucket policies for public access
 resource "aws_s3_bucket_policy" "bucket_one_public_access_policy" {
   bucket = aws_s3_bucket.static_website_one.bucket
 
@@ -92,7 +101,6 @@ resource "aws_s3_bucket_public_access_block" "static_website_two" {
   restrict_public_buckets = false
 }
 
-# Upload files to bucket one
 resource "aws_s3_object" "bucket_one_files" {
   for_each = { for file in local.website_one_files : file => file }
   bucket   = aws_s3_bucket.static_website_one.bucket
@@ -105,13 +113,4 @@ resource "aws_s3_object" "bucket_two_files" {
   bucket   = aws_s3_bucket.static_website_two.bucket
   key      = each.value
   source   = "${path.module}/../../apps/web-site-two/${each.value}"
-}
-
-resource "local_file" "version_mapping_file" {
-  filename = "${path.module}/version_mapping.json"
-  content  = jsonencode(local.version_mapping)
-  depends_on = [
-    aws_s3_bucket_website_configuration.static_website_configuration_one,
-    aws_s3_bucket_website_configuration.static_website_configuration_two
-  ]
 }
