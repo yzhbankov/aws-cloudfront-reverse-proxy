@@ -1,6 +1,5 @@
 locals {
   reverse_proxy_lambda_path = "${path.module}/../../apps/lambdas/reverse-proxy"
-  lambda_timeout            = 60
 }
 
 # Install Node.js dependencies for Lambda
@@ -85,7 +84,7 @@ resource "aws_lambda_function" "reverse_proxy_lambda" {
   handler          = "index.handler"
   source_code_hash = data.archive_file.reverse_proxy_lambda.output_base64sha256
   runtime          = "nodejs18.x"
-  timeout          = local.lambda_timeout
+  timeout          = 30
   publish          = true
 
   environment {
