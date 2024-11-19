@@ -51,6 +51,8 @@ resource "aws_s3_bucket_policy" "bucket_one_public_access_policy" {
       }
     ]
   })
+
+  depends_on = [aws_s3_bucket_public_access_block.static_website_one]
 }
 
 resource "aws_s3_bucket_policy" "bucket_two_public_access_policy" {
@@ -67,6 +69,8 @@ resource "aws_s3_bucket_policy" "bucket_two_public_access_policy" {
       }
     ]
   })
+
+  depends_on = [aws_s3_bucket_public_access_block.static_website_two]
 }
 
 resource "aws_s3_bucket_public_access_block" "static_website_one" {
