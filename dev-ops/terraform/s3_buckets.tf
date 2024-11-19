@@ -90,17 +90,41 @@ resource "aws_s3_bucket_public_access_block" "static_website_two" {
 }
 
 resource "aws_s3_object" "bucket_one_files" {
-  for_each     = { for file in local.website_one_files : file => file }
-  bucket       = aws_s3_bucket.static_website_one.bucket
-  key          = each.value
-  source       = "${path.module}/../../apps/web-site-one/${each.value}"
-  content_type = each.value == "index.html" ? "text/html" : ""
+  for_each = { for file in local.website_one_files : file => file }
+  bucket   = aws_s3_bucket.static_website_one.bucket
+  key      = each.value
+  source   = "${path.module}/../../apps/web-site-one/${each.value}"
+
+  # Set content_type based on file extension
+  content_type = lookup({
+    "html" = "text/html",
+    "css"  = "text/css",
+    "js"   = "application/javascript",
+    "json" = "application/json",
+    "png"  = "image/png",
+    "jpg"  = "image/jpeg",
+    "jpeg" = "image/jpeg",
+    "gif"  = "image/gif",
+    "svg"  = "image/svg+xml"
+  }, regex("[^.]+$", each.value), "application/octet-stream")
 }
 
 resource "aws_s3_object" "bucket_two_files" {
-  for_each     = { for file in local.website_two_files : file => file }
-  bucket       = aws_s3_bucket.static_website_two.bucket
-  key          = each.value
-  source       = "${path.module}/../../apps/web-site-two/${each.value}"
-  content_type = each.value == "index.html" ? "text/html" : ""
+  for_each = { for file in local.website_two_files : file => file }
+  bucket   = aws_s3_bucket.static_website_two.bucket
+  key      = each.value
+  source   = "${path.module}/../../apps/web-site-two/${each.value}"
+
+  # Set content_type based on file extension
+  content_type = lookup({
+    "html" = "text/html",
+    "css"  = "text/css",
+    "js"   = "application/javascript",
+    "json" = "application/json",
+    "png"  = "image/png",
+    "jpg"  = "image/jpeg",
+    "jpeg" = "image/jpeg",
+    "gif"  = "image/gif",
+    "svg"  = "image/svg+xml"
+  }, regex("[^.]+$", each.value), "application/octet-stream")
 }
