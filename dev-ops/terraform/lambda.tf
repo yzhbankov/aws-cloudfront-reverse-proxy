@@ -39,7 +39,7 @@ resource "null_resource" "install_lambda_dependencies" {
 
 resource "null_resource" "copy_version_mapping_to_lambda" {
   provisioner "local-exec" {
-    command = "cp ${local_file.version_mapping_file.filename} ${local.reverse_proxy_lambda_path}/version_mapping.json"
+    command = "cp ${local_file.version_mapping_file.filename} ${local.reverse_proxy_lambda_path}"
   }
 
   depends_on = [
