@@ -18,6 +18,14 @@ resource "local_file" "version_mapping_file" {
   ]
 }
 
+resource "null_resource" "check_version_mapping_file" {
+  provisioner "local-exec" {
+    command = "ls -la ${path.module}/version_mapping.json && cat ${path.module}/version_mapping.json"
+  }
+
+  depends_on = [local_file.version_mapping_file]
+}
+
 # Install Node.js dependencies for Lambda
 resource "null_resource" "install_lambda_dependencies" {
   provisioner "local-exec" {
@@ -31,10 +39,13 @@ resource "null_resource" "install_lambda_dependencies" {
 
 resource "null_resource" "copy_version_mapping_to_lambda" {
   provisioner "local-exec" {
-    command = "cp ${local_file.version_mapping_file} ${local.reverse_proxy_lambda_path}/version_mapping.json"
+    command = "cp ${local_file.version_mapping_file.filename} ${local.reverse_proxy_lambda_path}/version_mapping.json"
   }
 
-  depends_on = [local_file.version_mapping_file] # Ensure version mapping file is generated first
+  depends_on = [
+    local_file.version_mapping_file,
+    null_resource.check_version_mapping_file
+  ]
 }
 
 # Package Lambda function as a zip archive
@@ -45,7 +56,7 @@ data "archive_file" "reverse_proxy_lambda" {
 
   depends_on = [
     null_resource.install_lambda_dependencies,
-    null_resource.copy_version_mapping_to_lambda # Ensure the mapping file is copied before packaging
+    null_resource.copy_version_mapping_to_lambda
   ]
 }
 
