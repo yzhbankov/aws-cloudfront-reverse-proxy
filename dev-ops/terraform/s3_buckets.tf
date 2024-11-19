@@ -90,15 +90,17 @@ resource "aws_s3_bucket_public_access_block" "static_website_two" {
 }
 
 resource "aws_s3_object" "bucket_one_files" {
-  for_each = { for file in local.website_one_files : file => file }
-  bucket   = aws_s3_bucket.static_website_one.bucket
-  key      = each.value
-  source   = "${path.module}/../../apps/web-site-one/${each.value}"
+  for_each     = { for file in local.website_one_files : file => file }
+  bucket       = aws_s3_bucket.static_website_one.bucket
+  key          = each.value
+  source       = "${path.module}/../../apps/web-site-one/${each.value}"
+  content_type = each.value == "index.html" ? "text/html" : ""
 }
 
 resource "aws_s3_object" "bucket_two_files" {
-  for_each = { for file in local.website_two_files : file => file }
-  bucket   = aws_s3_bucket.static_website_two.bucket
-  key      = each.value
-  source   = "${path.module}/../../apps/web-site-two/${each.value}"
+  for_each     = { for file in local.website_two_files : file => file }
+  bucket       = aws_s3_bucket.static_website_two.bucket
+  key          = each.value
+  source       = "${path.module}/../../apps/web-site-two/${each.value}"
+  content_type = each.value == "index.html" ? "text/html" : ""
 }
