@@ -1,6 +1,21 @@
 locals {
   reverse_proxy_lambda_path = "${path.module}/../../apps/lambdas/reverse-proxy"
-  version_mapping_file      = "${path.module}/version_mapping.json"
+  version_mapping = {
+    "v1" = "http://${aws_s3_bucket.static_website_one.bucket}.s3-website-${var.AWS_REGION}.amazonaws.com"
+    "v2" = "http://${aws_s3_bucket.static_website_two.bucket}.s3-website-${var.AWS_REGION}.amazonaws.com"
+  }
+}
+
+# Ensure that version_mapping is updated only after the websites are configured
+resource "local_file" "version_mapping_file" {
+  filename = "${path.module}/version_mapping.json"
+  content  = jsonencode(local.version_mapping)
+  depends_on = [
+    aws_s3_bucket.static_website_one,
+    aws_s3_bucket.static_website_two,
+    aws_s3_bucket_website_configuration.static_website_configuration_one,
+    aws_s3_bucket_website_configuration.static_website_configuration_two
+  ]
 }
 
 # Install Node.js dependencies for Lambda
@@ -16,7 +31,7 @@ resource "null_resource" "install_lambda_dependencies" {
 
 resource "null_resource" "copy_version_mapping_to_lambda" {
   provisioner "local-exec" {
-    command = "cp ${local.version_mapping_file} ${local.reverse_proxy_lambda_path}/version_mapping.json"
+    command = "cp ${local_file.version_mapping_file} ${local.reverse_proxy_lambda_path}/version_mapping.json"
   }
 
   depends_on = [local_file.version_mapping_file] # Ensure version mapping file is generated first
