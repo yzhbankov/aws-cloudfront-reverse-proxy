@@ -6,7 +6,6 @@ locals {
   }
 }
 
-# Ensure that version_mapping is updated only after the websites are configured
 resource "local_file" "version_mapping_file" {
   filename = "${path.module}/version_mapping.json"
   content  = jsonencode(local.version_mapping)
@@ -26,7 +25,6 @@ resource "null_resource" "check_version_mapping_file" {
   depends_on = [local_file.version_mapping_file]
 }
 
-# Install Node.js dependencies for Lambda
 resource "null_resource" "copy_version_mapping_to_lambda" {
   provisioner "local-exec" {
     command = "cp ${path.module}/version_mapping.json ${local.reverse_proxy_lambda_path}"
@@ -50,11 +48,10 @@ resource "null_resource" "install_lambda_dependencies" {
   depends_on = [null_resource.copy_version_mapping_to_lambda]
 }
 
-# Package Lambda function as a zip archive
 data "archive_file" "reverse_proxy_lambda" {
   type        = "zip"
   source_dir  = local.reverse_proxy_lambda_path
-  output_path = "/tmp/lambda-edge.zip"
+  output_path = "${path.module}/lambda-edge.zip"
 
   depends_on = [
     null_resource.install_lambda_dependencies,
@@ -62,7 +59,6 @@ data "archive_file" "reverse_proxy_lambda" {
   ]
 }
 
-# Define IAM Role for Lambda Function
 resource "aws_iam_role" "reverse_proxy_edge_lambda_role" {
   name = "${terraform.workspace}-reverse-proxy-lambda-role"
 
@@ -75,8 +71,7 @@ resource "aws_iam_role" "reverse_proxy_edge_lambda_role" {
         Principal = {
           Service = [
             "lambda.amazonaws.com",
-            "edgelambda.amazonaws.com",
-            "cloudfront.amazonaws.com"
+            "edgelambda.amazonaws.com"
           ]
         }
       }
@@ -110,13 +105,11 @@ resource "aws_iam_policy" "custom_lambda_policy" {
   })
 }
 
-# Attach the Custom Policy to the Lambda Role
 resource "aws_iam_role_policy_attachment" "lambda_policy_attachment" {
   role       = aws_iam_role.reverse_proxy_edge_lambda_role.name
   policy_arn = aws_iam_policy.custom_lambda_policy.arn
 }
 
-# Create the Lambda Function
 resource "aws_lambda_function" "reverse_proxy_lambda" {
   function_name    = "${terraform.workspace}-lambda-edge-yz"
   role             = aws_iam_role.reverse_proxy_edge_lambda_role.arn
@@ -126,8 +119,6 @@ resource "aws_lambda_function" "reverse_proxy_lambda" {
   runtime          = "nodejs18.x"
   timeout          = 30
   publish          = true
-
-  # environment variables not allowed for Lambda Edge
 
   depends_on = [
     aws_iam_role_policy_attachment.lambda_policy_attachment
