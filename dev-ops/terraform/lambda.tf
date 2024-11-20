@@ -27,19 +27,9 @@ resource "null_resource" "check_version_mapping_file" {
 }
 
 # Install Node.js dependencies for Lambda
-resource "null_resource" "install_lambda_dependencies" {
-  provisioner "local-exec" {
-    command = "cd ${local.reverse_proxy_lambda_path} && npm install"
-  }
-
-  triggers = {
-    always_run = timestamp()
-  }
-}
-
 resource "null_resource" "copy_version_mapping_to_lambda" {
   provisioner "local-exec" {
-    command = "cp ${local_file.version_mapping_file.filename} ${local.reverse_proxy_lambda_path}"
+    command = "cp ${path.module}/version_mapping.json ${local.reverse_proxy_lambda_path}"
   }
 
   depends_on = [
@@ -48,11 +38,23 @@ resource "null_resource" "copy_version_mapping_to_lambda" {
   ]
 }
 
+resource "null_resource" "install_lambda_dependencies" {
+  provisioner "local-exec" {
+    command = "cd ${local.reverse_proxy_lambda_path} && npm install"
+  }
+
+  triggers = {
+    always_run = timestamp()
+  }
+
+  depends_on = [null_resource.copy_version_mapping_to_lambda]
+}
+
 # Package Lambda function as a zip archive
 data "archive_file" "reverse_proxy_lambda" {
   type        = "zip"
   source_dir  = local.reverse_proxy_lambda_path
-  output_path = "/tmp/kinesis-lambda.zip"
+  output_path = "/tmp/lambda-edge.zip"
 
   depends_on = [
     null_resource.install_lambda_dependencies,
