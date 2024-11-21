@@ -1,8 +1,8 @@
 locals {
   reverse_proxy_lambda_path = "${path.module}/../../apps/lambdas/reverse-proxy"
   version_mapping = {
-    "v1" = "http://${aws_s3_bucket.static_website_one.bucket}.s3-website-${var.AWS_REGION}.amazonaws.com"
-    "v2" = "http://${aws_s3_bucket.static_website_two.bucket}.s3-website-${var.AWS_REGION}.amazonaws.com"
+    "v1" = "${aws_s3_bucket.static_website_one.bucket}.s3-website-${var.AWS_REGION}.amazonaws.com"
+    "v2" = "${aws_s3_bucket.static_website_two.bucket}.s3-website-${var.AWS_REGION}.amazonaws.com"
   }
 }
 
