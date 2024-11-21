@@ -6,9 +6,19 @@ locals {
   }
 }
 
-resource "local_file" "version_mapping_file" {
-  filename = "${path.module}/version_mapping.json"
-  content  = jsonencode(local.version_mapping)
+resource "null_resource" "prepare_lambda_environment" {
+  provisioner "local-exec" {
+    command = <<EOT
+    cd ${local.reverse_proxy_lambda_path} &&
+    echo '${jsonencode(local.version_mapping)}' > version_mapping.json &&
+    npm install
+    EOT
+  }
+
+  triggers = {
+    always_run = timestamp()
+  }
+
   depends_on = [
     aws_s3_bucket.static_website_one,
     aws_s3_bucket.static_website_two,
@@ -17,45 +27,13 @@ resource "local_file" "version_mapping_file" {
   ]
 }
 
-resource "null_resource" "check_version_mapping_file" {
-  provisioner "local-exec" {
-    command = "ls -la ${path.module}/version_mapping.json && cat ${path.module}/version_mapping.json"
-  }
-
-  depends_on = [local_file.version_mapping_file]
-}
-
-resource "null_resource" "copy_version_mapping_to_lambda" {
-  provisioner "local-exec" {
-    command = "cp ${path.module}/version_mapping.json ${local.reverse_proxy_lambda_path}"
-  }
-
-  depends_on = [
-    local_file.version_mapping_file,
-    null_resource.check_version_mapping_file
-  ]
-}
-
-resource "null_resource" "install_lambda_dependencies" {
-  provisioner "local-exec" {
-    command = "cd ${local.reverse_proxy_lambda_path} && npm install"
-  }
-
-  triggers = {
-    always_run = timestamp()
-  }
-
-  depends_on = [null_resource.copy_version_mapping_to_lambda]
-}
-
 data "archive_file" "reverse_proxy_lambda" {
   type        = "zip"
   source_dir  = local.reverse_proxy_lambda_path
   output_path = "${path.module}/lambda-edge.zip"
 
   depends_on = [
-    null_resource.install_lambda_dependencies,
-    null_resource.copy_version_mapping_to_lambda
+    null_resource.prepare_lambda_environment,
   ]
 }
 
